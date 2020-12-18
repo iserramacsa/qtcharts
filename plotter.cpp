@@ -8,6 +8,9 @@
 
 const QColor kGridPenColor = QColor(220,220,220);
 const QColor kMarkPenColor = QColor(180,180,180);
+const unsigned int kDefaultFontSize = 11;
+const unsigned int kLegendHeight = 25;
+const unsigned int kLegendMargin = 3;
 
 Plotter::Plotter(QWidget *parent) : QWidget(parent)
 {
@@ -16,8 +19,14 @@ Plotter::Plotter(QWidget *parent) : QWidget(parent)
     _yAxis = true;
     _showMarks = true;
 
-    SetXRange(-50, 50);
+	_XDivs = 5;
+	_YDivs = 5;
+	SetXRange(-10, 10);
     SetYRange(-10, 10);
+
+	SetFontSize(kDefaultFontSize);
+	_showLegend = false;
+	SetSeries();
 }
 
 void Plotter::ShowGrid(bool show)
@@ -47,21 +56,67 @@ void Plotter::SetYRange(qreal min, qreal max)
     _minY = std::min(min, max);
     _maxY = std::max(min, max);
     setGridYMarks();
-    update();
+	update();
+}
+
+void Plotter::SetXDivisions(uint32_t divisions)
+{
+	_XDivs = divisions;
+	setGridXMarks();
+	update();
+}
+
+void Plotter::SetYDivisions(uint32_t divisions)
+{
+	_YDivs = divisions;
+	setGridYMarks();
+	update();
+}
+
+void Plotter::SetFontSize(uint32_t size)
+{
+	_font.setPointSize(size);
+}
+
+void Plotter::ShowLegend(bool show)
+{
+	_showLegend = show;
+	update();
+}
+
+void Plotter::drawLegend(QPainter &p, QMap<QString, QColor> series)
+{
+	QRectF legend (0 + 1, rect().height() - kLegendHeight - kLegendMargin, rect().width() - 2, kLegendHeight);
+	p.setPen(QPen(kGridPenColor, 1));
+	p.setBrush(Qt::white);
+	p.drawRect(legend);
+
+	if (series.size()){
+		QRectF rSerie = legend;
+		rSerie.setWidth(rSerie.width() / series.size());
+
+		QMapIterator<QString, QColor> serie(series);
+		while (serie.hasNext()) {
+			serie.next();
+			p.setPen(serie.value());
+			p.drawText(rSerie, Qt::AlignCenter, serie.key());
+			rSerie.moveLeft(rSerie.left() + (rSerie.width()));
+		}
+	}
 }
 
 void Plotter::setGridXMarks()
 {
     int diffX = _maxX - _minX;
-    _gridXMark = std::abs(diffX)/5;
-    _minGridXMark = _gridXMark / 5;
+	_gridXMark = std::abs(diffX) / _XDivs;
+	_minGridXMark = _gridXMark / 4;
 }
 
 void Plotter::setGridYMarks()
 {
     int diffY = _maxY - _minY;
-    _gridYMark = std::abs(diffY)/5;
-    _minGridYMark = _gridYMark / 5;
+	_gridYMark = std::abs(diffY) / _YDivs;
+	_minGridYMark = _gridYMark / 4;
 }
 
 void Plotter::paintEvent(QPaintEvent *event)
@@ -70,11 +125,19 @@ void Plotter::paintEvent(QPaintEvent *event)
     QPainter p (this);
     p.fillRect(rect(), Qt::white);
 
+	p.setFont(_font);
+
     qreal totalX = std::abs(_maxX) + std::abs(_minX) + _gridXMark;
     _dx = rect().width() * _gridXMark/ totalX;
     _dxmin = _dx * _minGridXMark / _gridXMark;
     qreal totalY = std::abs(_maxY) + std::abs(_minY) + _gridYMark;
-    _dy = rect().height() * _gridYMark/ totalY;
+
+	if(_showLegend) {
+		_dy = (rect().height() - kLegendHeight - kLegendMargin * 2) * _gridYMark/ totalY;
+	}
+	else {
+		_dy = rect().height() * _gridYMark/ totalY;
+	}
     _dymin = _dy * _minGridYMark / _gridYMark;
 
 
@@ -85,6 +148,9 @@ void Plotter::paintEvent(QPaintEvent *event)
         paintAxis(p, _xAxis, _yAxis, _showMarks);
     }
 
+	if (_showLegend) {
+		drawLegend(p, _series);
+	}
 }
 
 void Plotter::paintGrid(QPainter &p)
@@ -156,16 +222,19 @@ void Plotter::paintAxis(QPainter &p, bool xAxis, bool yAxis, bool marks)
             for (qreal x = _minX; x <= _maxX; x += _gridXMark, mark++) {
                 qreal pos = xToChartPos(x);
                 QPointF point((pos + _minGridXMark * 2), (y0 + _minGridYMark * 2));
-                p.drawText(point.x(), point.y(), _dx, _dy,  Qt::AlignTop | Qt::AlignLeft , QString::number(x));
+
+
+				p.drawText(point.x(), point.y(), _dx, _dy,  Qt::AlignTop | Qt::AlignLeft | Qt::TextDontClip, QString::number(x));
                 p.drawLine(pos, y0 - markSize /2, pos, y0 + markSize /2);
 
+				//ToDo: review when legend is visible
             }
         }
         if (yAxis){
             mark = 0;
             for (qreal y = _minY; y <= _maxY; y += _gridYMark, mark++) {
-                QRectF pos ((x0 - _dxmin*2), (yToChartPos(y) + _dymin*2/3), _dx, _dy);
-                p.drawText(pos, Qt::AlignTop| Qt::AlignLeft , QString::number(y));
+				QRectF pos ((x0 - _dxmin*2), yToChartPos(y), _dx/2, _dy);
+				p.drawText(pos, Qt::AlignTop| Qt::AlignRight | Qt::TextDontClip , QString::number(y));
                 p.drawLine(x0 - markSize /2, yToChartPos(y) , x0 + markSize /2, yToChartPos(y));
             }
         }
@@ -190,6 +259,11 @@ qreal Plotter::yToChartPos(qreal y) const
 {
     qreal minY = _minY - _minGridYMark * 2;
     qreal maxY = _maxY + _minGridYMark * 2;
-    return rect().height() - (rect().height() * (y - minY) / (maxY - minY));
+
+	qreal result = rect().height() - (rect().height() * (y - minY) / (maxY - minY));
+	if (_showLegend) {
+		result -= kLegendHeight - kLegendMargin * 2;
+	}
+	return result;
 }
 

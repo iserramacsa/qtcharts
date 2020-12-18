@@ -5,8 +5,9 @@
 #include <QComboBox>
 #include <QCheckBox>
 #include <QDoubleSpinBox>
+#include <QTimer>
 
-#include "plotter.h"
+#include "customplotter.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -14,38 +15,40 @@ QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT
+		Q_OBJECT
 
-public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+	public:
+		MainWindow(QWidget *parent = nullptr);
+		~MainWindow();
 
-private:
-    Ui::MainWindow *ui;
+	private:
+		Ui::MainWindow *ui;
 
-    QComboBox* _chartType;
+		QComboBox* _chartType;
 
-    Plotter *_plotter;
-    QCheckBox* _showXAxis;
-    QCheckBox* _showYAxis;
-    QCheckBox* _showMarks;
-    QCheckBox* _showGrid;
-    QDoubleSpinBox* _minX;
-    QDoubleSpinBox* _maxX;
-    QDoubleSpinBox* _minY;
-    QDoubleSpinBox* _maxY;
-
-
-    QWidget* buildCentralWidget();
-    QWidget* buildChartOptionsBar(QWidget *parent);
+		CustomPlotter *_plotter;
+		QCheckBox* _showXAxis;
+		QCheckBox* _showYAxis;
+		QCheckBox* _showMarks;
+		QCheckBox* _showGrid;
+		QDoubleSpinBox* _minX;
+		QDoubleSpinBox* _maxX;
+		QDoubleSpinBox* _minY;
+		QDoubleSpinBox* _maxY;
 
 
-private slots:
-    void onShowXAxisChanged();
-    void onShowYAxisChanged();
-    void onShowGridChanged();
-    void onShowMarksChanged();
-    void onChangeXAxis();
-    void onChangeYAxis();
+		QWidget* buildCentralWidget();
+		QWidget* buildChartOptionsBar(QWidget *parent);
+
+		QTimer _timer;
+
+
+	private slots:
+		void onShowXAxisChanged();
+		void onShowYAxisChanged();
+		void onShowGridChanged();
+		void onShowMarksChanged();
+		void onChangeXAxis();
+		void onChangeYAxis();
 };
 #endif // MAINWINDOW_H

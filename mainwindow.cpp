@@ -4,6 +4,19 @@
 #include <QHBoxLayout>
 #include <QFormLayout>
 
+//const unsigned int kDemoAValid[15]    = {1147, 5042, 5042, 5296, 5296, 5323, 5323, 4732, 4732, 5286, 5286, 5286, 3955, 3955, 4213};
+//const unsigned int kDemoBValid[15]    = {1151, 5039, 5039, 5296, 5296, 5327, 5327, 4720, 4720, 5283, 5283, 5283, 3950, 3950, 4201};
+//const unsigned int kDemoANoValid[15]  = {1149, 5041, 5041, 5296, 5296, 5325, 5325, 4728, 4728, 5285, 5285, 5285, 3954, 3954, 4208};
+//const unsigned int kDemoBNoValid[15]  = {1151, 5042, 5042, 5296, 5296, 5327, 5327, 4724, 4724, 5284, 5284, 5284, 3952, 3952, 4206};
+//const unsigned int kDemoDirChange[15] = {   1,    6,    6,    4,    4,    6,    6,    6,    6,    6,    6,    6,    6,    6,    6};
+
+const unsigned int kDemoData[5][15] = {{1147, 5042, 5042, 5296, 5296, 5323, 5323, 4732, 4732, 5286, 5286, 5286, 3955, 3955, 4213},   // A_VALID
+									   {1151, 5039, 5039, 5296, 5296, 5327, 5327, 4720, 4720, 5283, 5283, 5283, 3950, 3950, 4201},	 // B_VALID
+									   {1149, 5041, 5041, 5296, 5296, 5325, 5325, 4728, 4728, 5285, 5285, 5285, 3954, 3954, 4208},	 // A_NO_VALID
+									   {1151, 5042, 5042, 5296, 5296, 5327, 5327, 4724, 4724, 5284, 5284, 5284, 3952, 3952, 4206},	 // B_NO_VALID
+									   {   1,    6,    6,    4,    4,    6,    6,    6,    6,    6,    6,    6,    6,    6,    6}};	 // DIR_CHANGE
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -22,7 +35,7 @@ QWidget *MainWindow::buildCentralWidget()
     QWidget* central = new QWidget(this);
     QHBoxLayout* layout = new QHBoxLayout(central);
 
-    _plotter = new Plotter(central);
+	_plotter = new CustomPlotter(central);
 
     layout->addWidget(buildChartOptionsBar(central));
     layout->addWidget(_plotter);
@@ -44,10 +57,10 @@ QWidget *MainWindow::buildCentralWidget()
     connect(_showYAxis, SIGNAL(clicked(bool)), SLOT(onShowYAxisChanged()));
 
 
-    connect(_minX, SIGNAL(valueChanged(double)), SLOT(onChangeXAxis()));
-    connect(_maxX, SIGNAL(valueChanged(double)), SLOT(onChangeXAxis()));
-    connect(_minY, SIGNAL(valueChanged(double)), SLOT(onChangeYAxis()));
-    connect(_maxY, SIGNAL(valueChanged(double)), SLOT(onChangeYAxis()));
+//    connect(_minX, SIGNAL(valueChanged(double)), SLOT(onChangeXAxis()));
+//    connect(_maxX, SIGNAL(valueChanged(double)), SLOT(onChangeXAxis()));
+//    connect(_minY, SIGNAL(valueChanged(double)), SLOT(onChangeYAxis()));
+//    connect(_maxY, SIGNAL(valueChanged(double)), SLOT(onChangeYAxis()));
 
     return central;
 }
